@@ -75,11 +75,6 @@ function CardInner({
             className={`text-pretty break-words font-bold leading-snug text-slate-900 ${comfy ? "text-base" : "text-sm"}`}
           >
             <span className="block">{card.label}</span>
-            {card.type === "random" ? (
-              <span className="mt-0.5 block text-[11px] font-medium normal-case text-slate-500">
-                Random hours
-              </span>
-            ) : null}
           </div>
           {showSelectedBadge ? (
             <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-900">

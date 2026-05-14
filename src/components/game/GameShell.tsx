@@ -35,6 +35,7 @@ import { TimesheetBoard } from "./TimesheetBoard";
 import { CardTray } from "./CardTray";
 import { ReminderPopup } from "./ReminderPopup";
 import { EndScreen } from "./EndScreen";
+import { HowToPlayModal } from "./HowToPlayModal";
 import { OvertimeToast } from "./OvertimeToast";
 
 function emptyDays(): DaysState {
@@ -68,6 +69,8 @@ export function GameShell() {
     message: string;
     bumpPercent: number;
   } | null>(null);
+  /** False until player dismisses HR briefing — gates meter, elapsed time, and reminder pop-ups. */
+  const [runStarted, setRunStarted] = useState(false);
 
   const lostRef = useRef(false);
   const overtimeBlockingRef = useRef(false);
@@ -75,9 +78,11 @@ export function GameShell() {
   const totalHours = useMemo(() => totalHoursFromDays(days), [days]);
 
   const playing = gameStatus === "playing";
+  const timersActive = playing && runStarted;
   const overtimeBlocking = Boolean(overtimeToast) && playing;
   const handReady = availableCards.length === HAND_SIZE;
-  const uiDisabled = !playing || overtimeBlocking || !handReady;
+  const uiDisabled =
+    !playing || !runStarted || overtimeBlocking || !handReady;
 
   useEffect(() => {
     overtimeBlockingRef.current = overtimeBlocking;
@@ -95,7 +100,7 @@ export function GameShell() {
 
   /** HR meter tick — swap for frame-based or difficulty curves later. */
   useEffect(() => {
-    if (!playing) return;
+    if (!timersActive) return;
     const tickMs = 100;
     const perTick = (100 * tickMs) / (METER_FILL_SECONDS * 1000);
     const id = window.setInterval(() => {
@@ -113,20 +118,20 @@ export function GameShell() {
       });
     }, tickMs);
     return () => window.clearInterval(id);
-  }, [playing]);
+  }, [timersActive]);
 
   /** Survived time — tie to server validation or leaderboards later. */
   useEffect(() => {
-    if (!playing) return;
+    if (!timersActive) return;
     const id = window.setInterval(() => {
       setElapsedSeconds((s) => s + 1);
     }, 1000);
     return () => window.clearInterval(id);
-  }, [playing]);
+  }, [timersActive]);
 
   /** Staggered HR pop-ups — plug in real notifications or email parody copy later. */
   useEffect(() => {
-    if (!playing) return;
+    if (!timersActive) return;
     let cancelled = false;
     let timeoutId: number | undefined;
 
@@ -160,10 +165,11 @@ export function GameShell() {
       cancelled = true;
       if (timeoutId !== undefined) window.clearTimeout(timeoutId);
     };
-  }, [playing]);
+  }, [timersActive]);
 
   const resetGame = useCallback(() => {
     lostRef.current = false;
+    setRunStarted(false);
     setDays(emptyDays());
     setAvailableCards(generateHand(HAND_SIZE));
     setSelectedCardId(null);
@@ -179,15 +185,22 @@ export function GameShell() {
 
   const handleSelectCard = useCallback(
     (id: string) => {
-      if (!playing || overtimeToast || !handReady) return;
+      if (!playing || !runStarted || overtimeToast || !handReady) return;
       setSelectedCardId((prev) => (prev === id ? null : id));
     },
-    [handReady, overtimeToast, playing],
+    [handReady, overtimeToast, playing, runStarted],
   );
 
   const handleTapDay = useCallback(
     (dayId: WeekdayId) => {
-      if (!playing || overtimeToast || !selectedCardId || !handReady) return;
+      if (
+        !playing ||
+        !runStarted ||
+        overtimeToast ||
+        !selectedCardId ||
+        !handReady
+      )
+        return;
       const card = availableCards.find((c) => c.id === selectedCardId);
       if (!card) return;
 
@@ -240,11 +253,20 @@ export function GameShell() {
         `Placed ${card.label} (${card.hours}h) on ${label}. Total ${(totalHours + card.hours).toFixed(1)} hours.`,
       );
     },
-    [availableCards, days, handReady, overtimeToast, playing, selectedCardId, totalHours],
+    [
+      availableCards,
+      days,
+      handReady,
+      overtimeToast,
+      playing,
+      runStarted,
+      selectedCardId,
+      totalHours,
+    ],
   );
 
   const handleSubmit = useCallback(() => {
-    if (!playing || overtimeToast || !handReady) return;
+    if (!playing || !runStarted || overtimeToast || !handReady) return;
     const total = totalHoursFromDays(days);
     // Expand later: per-day minimums, project codes, manager approval flows, etc.
     if (total >= TARGET_HOURS) {
@@ -256,7 +278,7 @@ export function GameShell() {
         `You have ${total.toFixed(1)} hours. Reach at least ${TARGET_HOURS} hours, then submit.`,
       );
     }
-  }, [days, handReady, overtimeToast, playing]);
+  }, [days, handReady, overtimeToast, playing, runStarted]);
 
   const dismissOvertimeToast = useCallback(() => {
     setOvertimeToast(null);
@@ -269,10 +291,10 @@ export function GameShell() {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-linear-to-b from-amber-200/80 via-amber-100 to-sky-100">
       <a
-        href="#game-region"
+        href={playing && !runStarted ? "#howto-start" : "#game-region"}
         className="sr-only focus:fixed focus:left-3 focus:top-3 focus:z-100 focus:m-0 focus:inline-block focus:h-auto focus:w-auto focus:overflow-visible focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-slate-900 focus:shadow-lg"
       >
-        Skip to game
+        {playing && !runStarted ? "Skip to start button" : "Skip to game"}
       </a>
       <div
         id="game-region"
@@ -358,7 +380,14 @@ export function GameShell() {
         </button>
       </div>
 
-      {overtimeToast && playing ? (
+      {playing && !runStarted ? (
+        <HowToPlayModal
+          handReady={handReady}
+          onStart={() => setRunStarted(true)}
+        />
+      ) : null}
+
+      {overtimeToast && playing && runStarted ? (
         <OvertimeToast
           key={overtimeToast.id}
           message={overtimeToast.message}
@@ -367,7 +396,7 @@ export function GameShell() {
         />
       ) : null}
 
-      {activeReminder && playing ? (
+      {activeReminder && playing && runStarted ? (
         <ReminderPopup reminder={activeReminder} onDismiss={dismissReminder} />
       ) : null}
 

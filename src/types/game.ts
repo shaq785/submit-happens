@@ -9,8 +9,7 @@ export type TimeCardType =
   | "meeting"
   | "qa"
   | "admin"
-  | "client"
-  | "random";
+  | "client";
 
 export interface TimeEntryCard {
   id: string;
