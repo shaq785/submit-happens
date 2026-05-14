@@ -1,0 +1,66 @@
+/* Global keyframes for Submit Happens — keep motion subtle for accessibility. */
+
+@keyframes sh-wiggle {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
+@keyframes sh-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.02) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sh-meter-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+}
+
+@keyframes sh-card-selected {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.sh-reminder-card {
+  animation: sh-bounce-in 0.35s ease-out both, sh-wiggle 2.2s ease-in-out 0.35s infinite;
+}
+
+.sh-meter-high {
+  animation: sh-meter-pulse 1.4s ease-in-out infinite;
+}
+
+.sh-card-selected-pulse {
+  animation: sh-card-selected 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-reminder-card,
+  .sh-meter-high,
+  .sh-card-selected-pulse {
+    animation: none !important;
+  }
+}

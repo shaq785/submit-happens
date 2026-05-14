@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Submit Happens
 
-## Getting Started
+A responsive, tap-first browser game built with **Next.js (App Router)**, **React**, **Tailwind CSS**, and a small **global SCSS** animation layer. Fill a weekly timesheet to **40+ hours** and tap **Submit timesheet** before the **HR reminder meter** reaches **100%**.
 
-First, run the development server:
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) 20+ recommended (matches Next.js 16 expectations)
+
+## Setup
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command         | Description              |
+| --------------- | ------------------------ |
+| `npm run dev`   | Start the dev server     |
+| `npm run build` | Production build         |
+| `npm run start` | Run the production build |
+| `npm run lint`  | Run ESLint               |
 
-## Learn More
+## How to play
 
-To learn more about Next.js, take a look at the following resources:
+1. Tap a **time card** in the tray (it highlights with ring, motion, and “Selected” copy).
+2. Tap a **weekday column** to place that card.
+3. A **new card** replaces the one you used.
+4. Reach **at least 40 hours** total, then tap **Submit timesheet** before the HR meter fills.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+HR **pop-ups** appear on a timer; the dimmed overlay does not block taps on the board—tap the card to dismiss. **Share Score** uses the Web Share API when available, otherwise copies text to the clipboard and shows **Copied!**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
+- **Vercel:** connect the repo and use the default Next.js preset (`npm run build` / `.next` output).
+- **Netlify:** use the official Next.js runtime (for example the Netlify Next plugin) so server features and routing work as expected; static export is not required for this app.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project layout
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app` — App Router entry (`page.tsx`, `layout.tsx`, `globals.css`)
+- `src/components/game` — UI pieces (`GameShell`, board, tray, meter, pop-up, end screens)
+- `src/lib` — card generation and tunable constants
+- `src/styles/game-animations.scss` — keyframes (wiggle, meter pulse, selected card)
+- `src/types/game.ts` — shared types
+
+Game rules, pacing, and copy are centralized in `src/lib/gameConstants.ts` and `src/lib/generateRandomCard.ts` so you can extend difficulty, streaks, or new card types without rewiring the UI.
