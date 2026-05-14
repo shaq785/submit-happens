@@ -71,16 +71,16 @@ function CardInner({
     return (
       <div className="flex flex-col gap-2">
         <div className="min-w-0">
-          <p
+          <div
             className={`text-pretty break-words font-bold leading-snug text-slate-900 ${comfy ? "text-base" : "text-sm"}`}
           >
-            {card.label}
+            <span className="block">{card.label}</span>
             {card.type === "random" ? (
               <span className="mt-0.5 block text-[11px] font-medium normal-case text-slate-500">
                 Random hours
               </span>
             ) : null}
-          </p>
+          </div>
           {showSelectedBadge ? (
             <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-900">
               Selected — tap a day

@@ -19,10 +19,6 @@ export function EndScreen({
   const secs = survivedSeconds % 60;
   const timeLabel = `${mins}m ${secs.toString().padStart(2, "0")}s`;
 
-  const shareText = won
-    ? `I submitted my timesheet with ${totalHours.toFixed(1)} hours before HR caught me.`
-    : `I logged ${totalHours.toFixed(1)} hours before HR caught me in Submit Happens.`;
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm"
@@ -66,7 +62,11 @@ export function EndScreen({
           >
             {won ? "Play again" : "Try again"}
           </button>
-          <ShareButton shareText={shareText} />
+          <ShareButton
+            won={won}
+            totalHours={totalHours}
+            survivedSeconds={survivedSeconds}
+          />
         </div>
       </div>
     </div>

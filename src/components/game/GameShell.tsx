@@ -53,7 +53,8 @@ function weekdayLabel(id: WeekdayId): string {
 
 export function GameShell() {
   const [days, setDays] = useState<DaysState>(() => emptyDays());
-  const [availableCards, setAvailableCards] = useState(() => generateHand(HAND_SIZE));
+  /** Empty until client mount so SSR HTML matches hydration (random hand differs per run). */
+  const [availableCards, setAvailableCards] = useState<TimeEntryCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [reminderMeter, setReminderMeter] = useState(0);
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
@@ -75,11 +76,22 @@ export function GameShell() {
 
   const playing = gameStatus === "playing";
   const overtimeBlocking = Boolean(overtimeToast) && playing;
-  const uiDisabled = !playing || overtimeBlocking;
+  const handReady = availableCards.length === HAND_SIZE;
+  const uiDisabled = !playing || overtimeBlocking || !handReady;
 
   useEffect(() => {
     overtimeBlockingRef.current = overtimeBlocking;
   }, [overtimeBlocking]);
+
+  /** Deal opening hand after mount so SSR + first client paint match (random IDs/labels). */
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => {
+      setAvailableCards((prev) =>
+        prev.length === 0 ? generateHand(HAND_SIZE) : prev,
+      );
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, []);
 
   /** HR meter tick — swap for frame-based or difficulty curves later. */
   useEffect(() => {
@@ -167,15 +179,15 @@ export function GameShell() {
 
   const handleSelectCard = useCallback(
     (id: string) => {
-      if (!playing || overtimeToast) return;
+      if (!playing || overtimeToast || !handReady) return;
       setSelectedCardId((prev) => (prev === id ? null : id));
     },
-    [overtimeToast, playing],
+    [handReady, overtimeToast, playing],
   );
 
   const handleTapDay = useCallback(
     (dayId: WeekdayId) => {
-      if (!playing || overtimeToast || !selectedCardId) return;
+      if (!playing || overtimeToast || !selectedCardId || !handReady) return;
       const card = availableCards.find((c) => c.id === selectedCardId);
       if (!card) return;
 
@@ -228,11 +240,11 @@ export function GameShell() {
         `Placed ${card.label} (${card.hours}h) on ${label}. Total ${(totalHours + card.hours).toFixed(1)} hours.`,
       );
     },
-    [availableCards, days, overtimeToast, playing, selectedCardId, totalHours],
+    [availableCards, days, handReady, overtimeToast, playing, selectedCardId, totalHours],
   );
 
   const handleSubmit = useCallback(() => {
-    if (!playing || overtimeToast) return;
+    if (!playing || overtimeToast || !handReady) return;
     const total = totalHoursFromDays(days);
     // Expand later: per-day minimums, project codes, manager approval flows, etc.
     if (total >= TARGET_HOURS) {
@@ -244,7 +256,7 @@ export function GameShell() {
         `You have ${total.toFixed(1)} hours. Reach at least ${TARGET_HOURS} hours, then submit.`,
       );
     }
-  }, [days, overtimeToast, playing]);
+  }, [days, handReady, overtimeToast, playing]);
 
   const dismissOvertimeToast = useCallback(() => {
     setOvertimeToast(null);
