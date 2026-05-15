@@ -12,10 +12,40 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const metadataBase =
+  process.env.NEXT_PUBLIC_SITE_URL != null &&
+  process.env.NEXT_PUBLIC_SITE_URL !== ""
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+    : process.env.VERCEL_URL != null && process.env.VERCEL_URL !== ""
+      ? new URL(`https://${process.env.VERCEL_URL}`)
+      : new URL("http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase,
   title: "Submit Happens",
   description:
-    "A tap-to-play browser game: fill your weekly timesheet before HR’s reminder meter hits 100%.",
+    "From Human Resources: a tap-to-play time-entry drill. Log the week and submit before the patience meter runs out—because apparently we have to.",
+  icons: {
+    icon: "/favicon.ico",
+  },
+  openGraph: {
+    title: "Submit Happens",
+    description:
+      "From Human Resources: a tap-to-play time-entry drill. Log the week and submit before the patience meter runs out—because apparently we have to.",
+    images: [
+      {
+        url: "/ogimage.png",
+        alt: "Submit Happens — weekly timesheet arcade",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Submit Happens",
+    description:
+      "From Human Resources: a tap-to-play time-entry drill. Log the week and submit before the patience meter runs out—because apparently we have to.",
+    images: ["/ogimage.png"],
+  },
 };
 
 export default function RootLayout({

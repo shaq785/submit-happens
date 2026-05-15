@@ -37,22 +37,22 @@ export function ShareButton({
   }, [survivedSeconds, totalHours, won]);
 
   return (
-    <div className="relative inline-flex flex-col items-stretch">
+    <div className="relative inline-flex min-w-0 flex-col items-stretch">
       <button
         type="button"
         onClick={handleShare}
-        aria-label="Copy score, link, and invite text to clipboard"
-        className={`rounded-xl border border-slate-200/90 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-md shadow-slate-900/10 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${className}`}
+        aria-label="Copy share recap, link, and invite to clipboard"
+        className={`rounded-xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2 ${className}`}
       >
-        Share Score
+        Share recap
       </button>
       {copied ? (
         <span
-          className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-md"
+          className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-max -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white shadow-lg ring-1 ring-white/10"
           role="status"
           aria-live="polite"
         >
-          Copied!
+          Recap copied to clipboard
         </span>
       ) : null}
     </div>

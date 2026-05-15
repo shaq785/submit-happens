@@ -28,21 +28,21 @@ export function buildSubmitHappensShareMessage({
   if (won) {
     const survived = formatSurvived(survivedSeconds);
     return [
-      "I just played Submit Happens and actually submitted my timesheet on time.",
+      "I survived Submit Happens — Human Resources put me in time-entry boot camp and I still won.",
       "",
-      `My run: ${h} hours logged, survived HR pressure for ${survived}.`,
+      `Score: ${h} hours. Kept the HR patience meter at bay for ${survived}.`,
       "",
-      "Think you can beat that? It’s a free tap-to-play browser game (no install):",
+      "Think you can log faster? Free tap-to-play in the browser:",
       gameUrl,
     ].join("\n");
   }
 
   return [
-    "I just played Submit Happens — HR got me before I could submit clean.",
+    "I lost Submit Happens — Human Resources ran out of patience before I ran out of excuses.",
     "",
-    `My run: ${h} hours logged before it all fell apart.`,
+    `Score: ${h} hours before the meter won.`,
     "",
-    "Bet you can last longer. Free tap-to-play in the browser:",
+    "Try not to be worse than me. Free tap-to-play in the browser:",
     gameUrl,
   ].join("\n");
 }

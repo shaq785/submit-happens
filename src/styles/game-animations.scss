@@ -46,15 +46,17 @@
 }
 
 .sh-reminder-card {
-  animation: sh-bounce-in 0.35s ease-out both, sh-wiggle 2.2s ease-in-out 0.35s infinite;
+  animation: sh-bounce-in 0.38s ease-out both;
 }
 
 .sh-meter-high {
   animation: sh-meter-pulse 1.4s ease-in-out infinite;
 }
 
-.sh-card-selected-pulse {
-  animation: sh-card-selected 1.6s ease-in-out infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .sh-card-selected-pulse {
+    animation: sh-card-selected 2s ease-in-out infinite;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
