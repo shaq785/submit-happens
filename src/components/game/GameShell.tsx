@@ -31,19 +31,21 @@ import {
 import type {
   ActiveReminder,
   DaysState,
+  Difficulty,
   GameStatus,
   TimeEntryCard,
   WeekdayId,
 } from "@/types/game";
 import {
+  DEFAULT_DIFFICULTY,
   HAND_SIZE,
   HR_REMINDER_MESSAGES,
   MAX_HOURS_PER_DAY,
-  METER_FILL_SECONDS,
   REMINDER_INTERVAL_MAX_MS,
   REMINDER_INTERVAL_MIN_MS,
   TARGET_HOURS,
   WEEKDAYS,
+  getDifficultyConfig,
   pickOvertimeToastLine,
   randomOvertimeMeterBump,
   randomVagueSubmitMeterPenalty,
@@ -58,6 +60,7 @@ import { EndScreen } from "./EndScreen";
 import { HowToPlayModal } from "./HowToPlayModal";
 import { OvertimeToast } from "./OvertimeToast";
 import { VagueTimesheetModal } from "./VagueTimesheetModal";
+import { HrGifAmbience } from "./HrGifAmbience";
 
 function emptyDays(): DaysState {
   return { mon: [], tue: [], wed: [], thu: [], fri: [] };
@@ -116,6 +119,11 @@ export function GameShell() {
   } | null>(null);
   /** False until player dismisses HR briefing — gates meter, elapsed time, and reminder pop-ups. */
   const [runStarted, setRunStarted] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>(DEFAULT_DIFFICULTY);
+  const difficultyConfig = useMemo(
+    () => getDifficultyConfig(difficulty),
+    [difficulty],
+  );
   const [placementStack, setPlacementStack] = useState<PlacementRecord[]>([]);
   const [draggingCard, setDraggingCard] = useState<TimeEntryCard | null>(null);
 
@@ -192,7 +200,8 @@ export function GameShell() {
   useEffect(() => {
     if (!timersActive) return;
     const tickMs = 100;
-    const perTick = (100 * tickMs) / (METER_FILL_SECONDS * 1000);
+    const perTick =
+      (100 * tickMs) / (difficultyConfig.meterFillSeconds * 1000);
     const id = window.setInterval(() => {
       setReminderMeter((m) => {
         const next = Math.min(100, m + perTick);
@@ -211,7 +220,7 @@ export function GameShell() {
       });
     }, tickMs);
     return () => window.clearInterval(id);
-  }, [timersActive]);
+  }, [difficultyConfig.meterFillSeconds, timersActive]);
 
   /** Survived time — tie to server validation or leaderboards later. */
   useEffect(() => {
@@ -310,7 +319,7 @@ export function GameShell() {
 
       let meterBumpFromCrossing = 0;
       if (crossedDailyCap) {
-        const bump = randomOvertimeMeterBump();
+        const bump = randomOvertimeMeterBump(difficultyConfig.meterBumpScale);
         meterBumpFromCrossing = bump;
         setReminderMeter((m) => {
           const next = Math.min(100, m + bump);
@@ -362,6 +371,7 @@ export function GameShell() {
     [
       availableCards,
       days,
+      difficultyConfig.meterBumpScale,
       handReady,
       policyModalBlocking,
       playing,
@@ -499,7 +509,9 @@ export function GameShell() {
     if (total >= TARGET_HOURS) {
       if (isTimesheetTooVague(days)) {
         setVagueSubmitModal({
-          penaltyPercent: randomVagueSubmitMeterPenalty(),
+          penaltyPercent: randomVagueSubmitMeterPenalty(
+            difficultyConfig.meterBumpScale,
+          ),
         });
         return;
       }
@@ -514,7 +526,14 @@ export function GameShell() {
         `Only ${total.toFixed(1)} hours logged. Human Resources expects ${TARGET_HOURS}+ before we pretend you understand deadlines.`,
       );
     }
-  }, [days, handReady, policyModalBlocking, playing, runStarted]);
+  }, [
+    days,
+    difficultyConfig.meterBumpScale,
+    handReady,
+    policyModalBlocking,
+    playing,
+    runStarted,
+  ]);
 
   const dismissOvertimeToast = useCallback(() => {
     setOvertimeToast(null);
@@ -525,7 +544,13 @@ export function GameShell() {
   }, []);
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col bg-linear-to-b from-slate-100 via-white to-sky-50/40">
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-linear-to-br from-slate-100 via-emerald-50/30 to-sky-100/50 lg:h-full lg:max-h-full lg:overflow-hidden">
+      <div className="sh-game-ambient" aria-hidden>
+        <div className="sh-game-ambient__blob sh-game-ambient__blob--emerald" />
+        <div className="sh-game-ambient__blob sh-game-ambient__blob--sky" />
+        <div className="sh-game-ambient__blob sh-game-ambient__blob--violet" />
+      </div>
+      <HrGifAmbience active={timersActive && !policyModalBlocking} />
       <a
         href={playing && !runStarted ? "#howto-start" : "#game-region"}
         className="sr-only focus:fixed focus:left-3 focus:top-3 focus:z-100 focus:m-0 focus:inline-block focus:h-auto focus:w-auto focus:overflow-visible focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-slate-900 focus:shadow-lg"
@@ -544,14 +569,14 @@ export function GameShell() {
       >
       <div
         id="game-region"
-        className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-4 sm:gap-5 sm:px-5 sm:py-5 lg:min-h-0 lg:py-8"
+        className="mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col gap-4 px-4 py-4 sm:gap-5 sm:px-5 sm:py-5 lg:min-h-0 lg:overflow-hidden lg:py-4"
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-5 lg:min-h-[calc(100dvh-2.5rem)] lg:justify-center lg:gap-8">
-          <div className="shrink-0 text-center">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 lg:min-h-0 lg:gap-4 lg:overflow-hidden">
+          <div className="shrink-0 text-center lg:px-2">
+            <h1 className="sh-heading-gradient text-3xl font-semibold tracking-tight sm:text-4xl lg:text-4xl">
               Submit Happens
             </h1>
-            <p className="mx-auto mt-2 max-w-lg text-pretty text-sm leading-relaxed text-slate-600 sm:text-base">
+            <p className="mx-auto mt-2 max-w-lg text-pretty text-sm leading-relaxed text-slate-600 sm:text-base lg:mt-1 lg:text-sm lg:leading-snug">
               Human Resources put you in time-entry boot camp. Undo mistakes, share
               your recap, and beat the patience meter before it runs out faster than
               your excuses.
@@ -566,9 +591,13 @@ export function GameShell() {
             {statusMessage}
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col gap-4 pb-40 lg:grid lg:max-h-[min(720px,calc(100dvh-6rem))] lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] lg:items-stretch lg:gap-6 lg:pb-0">
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:min-h-0 lg:flex-1">
-              <HeaderStats totalHours={totalHours} reminderMeter={reminderMeter} />
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 pb-40 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] lg:items-stretch lg:gap-4 lg:overflow-hidden lg:pb-0">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:min-h-0 lg:overflow-hidden">
+              <HeaderStats
+                totalHours={totalHours}
+                reminderMeter={reminderMeter}
+                difficulty={difficulty}
+              />
               <TimesheetBoard
                 days={days}
                 disabled={uiDisabled}
@@ -577,14 +606,14 @@ export function GameShell() {
                 onTapDay={handleTapDay}
               />
             <p
-              className="rounded-xl bg-white/70 px-3 py-2.5 text-center text-sm leading-relaxed text-slate-600 ring-1 ring-slate-900/5 backdrop-blur-sm sm:px-4 lg:hidden"
+              className="sh-panel rounded-xl px-3 py-2.5 text-center text-sm leading-relaxed text-slate-600 backdrop-blur-sm sm:px-4 lg:hidden"
               aria-live="polite"
             >
               {statusMessage}
             </p>
             </div>
 
-            <aside className="hidden min-h-0 w-full min-w-0 flex-col gap-4 overflow-y-auto lg:flex lg:max-h-full">
+            <aside className="hidden min-h-0 w-full min-w-0 flex-col gap-2 overflow-hidden lg:flex lg:min-h-0">
               <CardTray
                 placement="sidebar"
                 cards={availableCards}
@@ -596,12 +625,12 @@ export function GameShell() {
               type="button"
               onClick={handleSubmit}
               disabled={uiDisabled}
-              className="w-full rounded-xl bg-emerald-600 px-4 py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-emerald-900/10 transition enabled:hover:bg-emerald-500 enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-emerald-500/60 enabled:focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="sh-btn-submit w-full shrink-0 rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-white transition enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-emerald-500/60 enabled:focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Submit timesheet
             </button>
             <p
-              className="rounded-xl bg-white/70 px-3 py-2.5 text-center text-sm leading-relaxed text-slate-600 ring-1 ring-slate-900/5 backdrop-blur-sm"
+              className="sh-panel line-clamp-3 min-h-0 shrink-0 rounded-xl px-3 py-2 text-center text-xs leading-snug text-slate-600 backdrop-blur-sm"
               aria-live="polite"
             >
               {statusMessage}
@@ -612,7 +641,7 @@ export function GameShell() {
       </div>
 
       {/* Mobile sticky tray + submit — refine breakpoints or safe-area here later. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/60 bg-white/85 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_24px_-8px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
+      <div className="sh-panel--dock fixed inset-x-0 bottom-0 z-30 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
         <CardTray
           placement="dock"
           cards={availableCards}
@@ -624,7 +653,7 @@ export function GameShell() {
           type="button"
           onClick={handleSubmit}
           disabled={uiDisabled}
-          className="mt-3 w-full rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition enabled:active:scale-[0.99] enabled:hover:bg-emerald-500 enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-emerald-500/60 enabled:focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="sh-btn-submit mt-3 w-full rounded-xl px-4 py-3.5 text-sm font-semibold text-white transition enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-emerald-500/60 enabled:focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Submit timesheet
         </button>
@@ -639,7 +668,7 @@ export function GameShell() {
                 transform: "translate3d(-9999px, -9999px, 0)",
               }}
             >
-              <div className="flex flex-col gap-1 rounded-xl border border-slate-200/90 bg-white px-3 py-2.5 shadow-2xl shadow-slate-900/25 ring-2 ring-emerald-400/40">
+              <div className="flex flex-col gap-1 rounded-xl border border-white/80 bg-linear-to-br from-white to-emerald-50/90 px-3 py-2.5 shadow-[0_12px_40px_-8px_rgba(15,23,42,0.35)] ring-2 ring-emerald-400/50">
                 <span className="text-sm font-medium leading-snug text-slate-800">
                   {draggingCard.label}
                 </span>
@@ -657,7 +686,10 @@ export function GameShell() {
       {playing && !runStarted ? (
         <HowToPlayModal
           handReady={handReady}
-          onStart={() => setRunStarted(true)}
+          onStart={(d) => {
+            setDifficulty(d);
+            setRunStarted(true);
+          }}
         />
       ) : null}
 

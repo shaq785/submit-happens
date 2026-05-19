@@ -23,18 +23,18 @@ export function CardTray({
     <section
       className={
         sidebar
-          ? "w-full rounded-2xl bg-white/60 p-4 ring-1 ring-slate-900/[0.05] backdrop-blur-sm"
-          : "w-full rounded-t-2xl bg-white/70 p-3 ring-1 ring-slate-900/[0.06] backdrop-blur-xl sm:rounded-2xl sm:shadow-sm"
+          ? "sh-panel flex w-full shrink-0 flex-col overflow-hidden rounded-2xl p-3 backdrop-blur-md"
+          : "w-full rounded-2xl p-3 sm:shadow-sm"
       }
       aria-label="Available time cards"
     >
-      <h2 className="mb-3 text-xs font-medium tracking-wide text-slate-500">
+      <h2 className="mb-1.5 shrink-0 text-xs font-medium tracking-wide text-slate-500">
         Your hand — drag to a weekday or tap to select
       </h2>
       <div
         className={
           sidebar
-            ? "grid grid-cols-1 gap-2"
+            ? "grid grid-cols-1 content-start gap-2.5 auto-rows-min"
             : "grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5"
         }
       >
@@ -42,7 +42,7 @@ export function CardTray({
           <DraggableHandCard
             key={card.id}
             card={card}
-            density={sidebar ? "comfortable" : "compact"}
+            density={sidebar ? "sidebar" : "compact"}
             selected={!disabled && selectedId === card.id}
             disabled={disabled}
             onSelect={() => {

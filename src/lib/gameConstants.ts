@@ -1,6 +1,6 @@
 /** Tune pacing, copy, and difficulty without touching UI components. */
 
-import type { WeekdayId } from "@/types/game";
+import type { Difficulty, WeekdayId } from "@/types/game";
 
 export const WEEKDAYS: { id: WeekdayId; label: string }[] = [
   { id: "mon", label: "Monday" },
@@ -10,8 +10,45 @@ export const WEEKDAYS: { id: WeekdayId; label: string }[] = [
   { id: "fri", label: "Friday" },
 ];
 
-/** Seconds until the HR patience meter hits 100% at baseline (lower = harder). */
+/** Seconds until the HR patience meter hits 100% on medium (lower = harder). */
 export const METER_FILL_SECONDS = 55;
+
+export const DEFAULT_DIFFICULTY: Difficulty = "medium";
+
+export type DifficultyConfig = {
+  label: string;
+  hint: string;
+  meterFillSeconds: number;
+  /** Multiplier on overtime / vague-submit meter bumps. */
+  meterBumpScale: number;
+};
+
+export const DIFFICULTY_CONFIG: Record<Difficulty, DifficultyConfig> = {
+  easy: {
+    label: "Easy",
+    hint: "Meter fills slowly; HR bumps are lighter.",
+    meterFillSeconds: 80,
+    meterBumpScale: 0.65,
+  },
+  medium: {
+    label: "Medium",
+    hint: "The standard drill — same pace you’ve been playing.",
+    meterFillSeconds: METER_FILL_SECONDS,
+    meterBumpScale: 1,
+  },
+  hard: {
+    label: "Hard",
+    hint: "Meter climbs fast; overtime and lazy submits hurt more.",
+    meterFillSeconds: 38,
+    meterBumpScale: 1.4,
+  },
+};
+
+export const DIFFICULTY_OPTIONS: Difficulty[] = ["easy", "medium", "hard"];
+
+export function getDifficultyConfig(difficulty: Difficulty): DifficultyConfig {
+  return DIFFICULTY_CONFIG[difficulty];
+}
 
 /** HR pop-up cadence (ms) — random between min and max for variety. */
 export const REMINDER_INTERVAL_MIN_MS = 5000;
@@ -38,14 +75,16 @@ export const MAX_HOURS_PER_DAY = 8;
 /** Minimum distinct task types across Mon–Fri to accept a submit at 40+ hours. */
 export const MIN_UNIQUE_TASK_TYPES_FOR_SUBMIT = 3;
 
-/** 8–12% meter penalty when a 40h+ timesheet is too thin on task variety — tune later. */
-export function randomVagueSubmitMeterPenalty(): number {
-  return 8 + Math.floor(Math.random() * 5);
+/** 8–12% meter penalty when a 40h+ timesheet is too thin on task variety. */
+export function randomVagueSubmitMeterPenalty(meterBumpScale = 1): number {
+  const raw = 8 + Math.floor(Math.random() * 5);
+  return Math.min(100, Math.max(1, Math.round(raw * meterBumpScale)));
 }
 
-/** 1–3% HR meter nudge when a day first exceeds MAX_HOURS_PER_DAY — tune for difficulty later. */
-export function randomOvertimeMeterBump(): number {
-  return 1 + Math.floor(Math.random() * 3);
+/** 1–3% HR meter nudge when a day first exceeds MAX_HOURS_PER_DAY. */
+export function randomOvertimeMeterBump(meterBumpScale = 1): number {
+  const raw = 1 + Math.floor(Math.random() * 3);
+  return Math.max(1, Math.round(raw * meterBumpScale));
 }
 
 /** One-liner toast when a day crosses over the daily cap — add more personas / combos later. */

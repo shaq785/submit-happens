@@ -18,7 +18,7 @@ export function ReminderMeter({ percent }: ReminderMeterProps) {
         </span>
       </div>
       <div
-        className={`relative h-2 w-full overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-900/[0.04] lg:h-2.5 ${high ? "sh-meter-high" : ""}`}
+        className={`sh-meter-track relative h-2 w-full overflow-hidden rounded-full lg:h-2.5 ${high ? "sh-meter-high" : ""}`}
         role="progressbar"
         aria-valuenow={Math.round(clamped)}
         aria-valuemin={0}
@@ -26,7 +26,7 @@ export function ReminderMeter({ percent }: ReminderMeterProps) {
         aria-label="Human Resources patience level"
       >
         <div
-          className={`h-full rounded-full transition-[width] duration-300 ease-out ${high ? "bg-rose-500" : "bg-emerald-500"}`}
+          className={`h-full rounded-full transition-[width] duration-300 ease-out ${high ? "sh-meter-fill--high" : "sh-meter-fill"}`}
           style={{ width: `${clamped}%` }}
         />
       </div>

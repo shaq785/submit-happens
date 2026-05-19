@@ -8,8 +8,8 @@ import type { TimeEntryCard } from "@/types/game";
 type TimeCardProps = {
   card: TimeEntryCard;
   variant?: "hand" | "placed";
-  /** Wider desktop sidebar uses comfortable spacing; dock uses compact cells. */
-  density?: "compact" | "comfortable";
+  /** Dock = compact grid; sidebar = short single-row rows on desktop. */
+  density?: "compact" | "comfortable" | "sidebar";
   selected?: boolean;
   onSelect?: () => void;
   /** When provided, hand cards participate in @dnd-kit drag (listeners/ref on button). */
@@ -35,11 +35,11 @@ export function TimeCard({
     "w-full rounded-xl text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2";
 
   const handStyles = selected
-    ? "border border-emerald-300/80 bg-emerald-50/40 shadow-sm ring-1 ring-emerald-400/35 sh-card-selected-pulse"
-    : "border border-slate-200/70 bg-white shadow-sm hover:border-slate-300 hover:bg-slate-50/80";
+    ? "sh-hand-card sh-hand-card--selected border border-emerald-300/60 sh-card-selected-pulse"
+    : "sh-hand-card border border-slate-200/60 hover:border-emerald-200/80";
 
   const placedStyles =
-    "border border-slate-100 bg-slate-50/80 shadow-none pointer-events-none cursor-default";
+    "sh-placed-card border border-slate-200/50 shadow-sm pointer-events-none cursor-default";
 
   const comfy = density === "comfortable";
 
@@ -58,20 +58,26 @@ export function TimeCard({
         onClick={onSelect}
         aria-pressed={selected}
         aria-label={`${card.label}, ${card.hours} hours${selected ? ", selected" : ""}. Drag to a weekday or tap to select then tap a day.`}
-        className={`${base} ${handStyles} px-3 py-2.5 ${comfy ? "min-h-0 sm:py-3" : "min-h-[4.75rem] sm:min-h-0"} ${handDragClass} ${dnd ? "touch-none active:cursor-grabbing" : ""}`}
+        className={`${base} ${handStyles} ${
+          density === "sidebar"
+            ? "min-h-20 px-3.5 py-3.5"
+            : comfy
+              ? "px-3 py-2.5 sm:py-3"
+              : "min-h-19 px-3 py-2.5"
+        } ${handDragClass} ${dnd ? "touch-none active:cursor-grabbing" : ""}`}
       >
         <CardInner
           card={card}
           layout="hand"
           density={density}
-          showSelectedBadge={selected}
+          showSelectedBadge={selected && density !== "sidebar"}
         />
       </button>
     );
   }
 
   return (
-    <div className={`${base} ${placedStyles} px-2 py-1.5`}>
+    <div className={`${base} ${placedStyles} min-w-0 px-1.5 py-1 sm:px-2 sm:py-1.5`}>
       <CardInner card={card} layout="placed" />
     </div>
   );
@@ -85,10 +91,26 @@ function CardInner({
 }: {
   card: TimeEntryCard;
   layout: "hand" | "placed";
-  density?: "compact" | "comfortable";
+  density?: "compact" | "comfortable" | "sidebar";
   showSelectedBadge?: boolean;
 }) {
   if (layout === "hand") {
+    if (density === "sidebar") {
+      return (
+        <div className="flex flex-col justify-center gap-2">
+          <span className="min-w-0 text-base font-medium leading-snug text-slate-800">
+            {card.label}
+          </span>
+          <span
+            className="inline-flex w-fit items-center rounded-md bg-slate-100 px-2.5 py-1 font-mono text-sm font-semibold tabular-nums text-slate-800"
+            aria-hidden="true"
+          >
+            {card.hours}h
+          </span>
+        </div>
+      );
+    }
+
     const comfy = density === "comfortable";
     return (
       <div className="flex flex-col gap-2">
@@ -116,7 +138,7 @@ function CardInner({
 
   return (
     <div className="flex flex-col gap-1">
-      <p className="break-words text-[11px] font-medium leading-snug text-slate-700">
+      <p className="break-words text-[10px] font-medium leading-snug text-slate-700 sm:text-[11px]">
         {card.label}
       </p>
       <span

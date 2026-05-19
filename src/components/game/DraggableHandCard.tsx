@@ -8,7 +8,7 @@ type DraggableHandCardProps = {
   card: TimeEntryCard;
   selected: boolean;
   disabled: boolean;
-  density: "compact" | "comfortable";
+  density: "compact" | "comfortable" | "sidebar";
   onSelect: () => void;
 };
 

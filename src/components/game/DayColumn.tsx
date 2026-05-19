@@ -37,15 +37,15 @@ export function DayColumn({
       ref={setNodeRef}
       disabled={disabled}
       onClick={() => onTapDay(dayId)}
-      className={`flex h-full min-h-[112px] min-w-[132px] flex-1 flex-col rounded-xl border border-slate-200/80 bg-white/50 p-2.5 text-left transition enabled:hover:border-slate-300 enabled:hover:bg-white/80 enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-emerald-500/30 enabled:focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-[120px] sm:min-w-[118px] lg:min-h-[120px] lg:min-w-0 lg:max-h-[min(38vh,280px)] ${dropRing}`}
+      className={`sh-day-slot flex h-full min-h-[96px] min-w-0 w-full flex-col rounded-lg border border-slate-200/60 p-1.5 text-left transition enabled:focus-visible:outline-none enabled:focus-visible:ring-2 enabled:focus-visible:ring-emerald-500/30 enabled:focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-[112px] sm:rounded-xl sm:p-2.5 lg:min-h-0 lg:max-h-none ${dropRing}`}
       aria-label={`${label}, ${dayHours.toFixed(1)} hours logged. Tap to place selected card, or drop a hand card here.`}
     >
-      <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+      <div className="mb-1.5 flex flex-col gap-1 border-b border-slate-100 pb-1.5 sm:mb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:pb-2">
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[11px]">
           {label.slice(0, 3)}
         </span>
         <span
-          className={`shrink-0 rounded-md px-2 py-0.5 font-mono text-sm font-semibold tabular-nums sm:text-base lg:px-2.5 lg:py-1 ${
+          className={`w-fit shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums sm:px-2 sm:text-sm lg:px-2.5 lg:py-1 lg:text-base ${
             dayHours > MAX_HOURS_PER_DAY
               ? "bg-amber-100 text-amber-950 ring-1 ring-amber-200/80"
               : dayHours > 0
@@ -61,13 +61,16 @@ export function DayColumn({
       <div
         className={
           cards.length > 0
-            ? "flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-0.5"
-            : "flex flex-col items-center justify-center gap-1 py-3"
+            ? "flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-y-auto sm:gap-1.5 sm:pr-0.5"
+            : "flex flex-col items-center justify-center gap-1 py-2 sm:py-3"
         }
       >
         {cards.length === 0 ? (
-          <span className="max-w-34 text-center text-xs leading-snug text-slate-400 lg:max-w-none">
-            Drag a card here or tap a card, then this day
+          <span className="px-0.5 text-center text-[10px] leading-snug text-slate-400 sm:text-xs lg:max-w-none">
+            <span className="lg:hidden">Tap or drop</span>
+            <span className="hidden lg:inline">
+              Drag a card here or tap a card, then this day
+            </span>
           </span>
         ) : (
           cards.map((c) => <TimeCard key={c.id} card={c} variant="placed" />)
